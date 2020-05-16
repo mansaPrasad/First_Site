@@ -1,0 +1,6 @@
+]0;/stor/home/mp38229/Website]0;mp38229@educcomp03: ~/Websitemp38229@educcomp03:~/Website$ [K]0;mp38229@educcomp03: ~/Websitemp38229@educcomp03:~/Website$ ls
+config.toml  index.Rmd  [0m[01;34mstatic[0m  Website.Rproj
+[01;34mcontent[0m      [01;34mpublic[0m     [01;34mthemes[0m
+]0;/stor/home/mp38229/Website]0;mp38229@educcomp03: ~/Websitemp38229@educcomp03:~/Website$ git init
+Initialized empty Git repository in /stor/home/mp38229/Website/.git/
+]0;/stor/home/mp38229/Website]0;mp38229@educcomp03: ~/Websitemp38229@educcomp03:~/Website$ git add.[K .

@@ -1,0 +1,387 @@
+---
+title: "Mansa Prasad Project1"
+output:
+  html_document:
+    df_print: paged
+---
+
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/plotly-binding/plotly.js"></script>
+<script src="/rmarkdown-libs/typedarray/typedarray.min.js"></script>
+<script src="/rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="/rmarkdown-libs/crosstalk/css/crosstalk.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/crosstalk/js/crosstalk.min.js"></script>
+<link href="/rmarkdown-libs/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/plotly-main/plotly-latest.min.js"></script>
+
+
+<hr />
+<p><br><br></p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>I chose my data sets based on two viruses that have spread on a world scale, one of these viruses being the corona virus since it’s what’s on most peoples mind at the moment. The other virus that I chose was ebola which about 5 years ago brought out similar concers that are being evoked by carona. I wanted to compare these two viruses and see how they are infecting people and spreading worldwide! There is not as much information on carona as there is on ebola since it’s a relatively new virus, but it’s destruction and spread is similar. Both the datasets I found have the country’s and the dates that the virus infected, and it has the number of infected people! The ebola data was aquired through github and the corona data was aquired from a site that was looking into the infection rate of corona on a worldwide scale. I’m hoping to see if there are similar patterns between the two viruses and how many people they can infect in a certain time frame.</p>
+<hr />
+<div id="packages" class="section level3">
+<h3>Packages</h3>
+<pre class="r"><code>library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(cluster)
+library(GGally)</code></pre>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="data-sets" class="section level1">
+<h1>Data Sets:</h1>
+<p>These are the original datasets that were used. The ebola virus has data that was recorded for the span of three years, 2014-2016, while the corona virus only has two months recorded, January-February.</p>
+<pre class="r"><code>ebdat &lt;- read.csv(&quot;https://data.humdata.org/dataset/0d089fa0-3567-4b01-9c03-39d340ff34e3/resource/c59b5722-ca4b-41ca-a446-472d6d824d01/download/ebola_data_db_format.csv&quot;)
+
+crdat &lt;- read.csv(&quot;https://raw.githubusercontent.com/CryptoKass/ncov-data/master/world.daily-confirmed.jhu.csv&quot;)</code></pre>
+<pre class="r"><code>glimpse(ebdat)</code></pre>
+<pre><code>## Observations: 17,585
+## Variables: 4
+## $ Indicator &lt;fct&gt; &quot;Cumulative number of confirmed, probable and suspected Ebo…
+## $ Country   &lt;fct&gt; Guinea, Guinea, Guinea, Guinea, Guinea, Guinea, Guinea, Lib…
+## $ Date      &lt;fct&gt; 2015-03-10, 2015-03-10, 2015-03-10, 2015-03-10, 2015-03-10,…
+## $ value     &lt;dbl&gt; 3285, 2871, 392, 22, 2170, 1778, 392, 9343, 3150, 1879, 431…</code></pre>
+<pre class="r"><code>glimpse(crdat)</code></pre>
+<pre><code>## Observations: 18
+## Variables: 36
+## $ X                    &lt;fct&gt; 02/08, 02/07, 02/06, 02/05, 02/04, 02/03, 02/02,…
+## $ Mainland.China       &lt;int&gt; 37198, 31215, 30612, 24405, 24290, 20400, 17114,…
+## $ Others               &lt;int&gt; 61, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ Singapore            &lt;int&gt; 40, 30, 28, 28, 24, 18, 18, 18, 13, 10, 10, 7, 5…
+## $ Thailand             &lt;int&gt; 32, 25, 25, 25, 25, 19, 19, 19, 19, 14, 14, 14, …
+## $ Hong.Kong            &lt;int&gt; 26, 25, 24, 21, 18, 15, 15, 14, 12, 12, 10, 8, 8…
+## $ Japan                &lt;int&gt; 25, 25, 45, 22, 22, 20, 20, 20, 15, 11, 11, 7, 4…
+## $ South.Korea          &lt;int&gt; 25, 24, 23, 19, 16, 15, 15, 15, 11, 6, 4, 4, 4, …
+## $ Taiwan               &lt;int&gt; 17, 16, 16, 11, 11, 10, 10, 10, 10, 9, 8, 8, 5, …
+## $ Malaysia             &lt;int&gt; 16, 12, 12, 12, 10, 8, 8, 8, 8, 8, 7, 7, 4, 4, 3…
+## $ Germany              &lt;int&gt; 13, 13, 12, 12, 12, 12, 10, 8, 5, 4, 4, 4, 1, 0,…
+## $ Vietnam              &lt;int&gt; 13, 10, 10, 8, 8, 8, 6, 6, 2, 2, 2, 2, 2, 2, 2, …
+## $ France               &lt;int&gt; 11, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 4, 3, 3, 3, 2,…
+## $ Macau                &lt;int&gt; 10, 10, 10, 10, 10, 8, 8, 7, 7, 7, 7, 7, 6, 6, 2…
+## $ United.Arab.Emirates &lt;int&gt; 7, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 0, 0, 0, 0, 0, …
+## $ Australia            &lt;int&gt; 15, 15, 14, 13, 13, 12, 12, 12, 9, 9, 7, 5, 5, 4…
+## $ Canada               &lt;int&gt; 7, 7, 5, 4, 4, 4, 4, 4, 3, 3, 3, 2, 1, 1, 0, 0, …
+## $ India                &lt;int&gt; 3, 3, 3, 3, 3, 3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, …
+## $ Italy                &lt;int&gt; 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, …
+## $ Philippines          &lt;int&gt; 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, …
+## $ UK                   &lt;int&gt; 3, 3, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, …
+## $ Russia               &lt;int&gt; 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, …
+## $ US                   &lt;int&gt; 12, 12, 12, 11, 11, 11, 9, 8, 7, 6, 5, 5, 5, 5, …
+## $ Belgium              &lt;int&gt; 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Cambodia             &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, …
+## $ Finland              &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, …
+## $ Nepal                &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, …
+## $ Spain                &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Sri.Lanka            &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, …
+## $ Sweden               &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, …
+## $ Ivory.Coast          &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Mexico               &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Brazil               &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ Colombia             &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ China                &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ United.States        &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</code></pre>
+<hr />
+<p><br></p>
+</div>
+<div id="tidying" class="section level1">
+<h1>Tidying:</h1>
+<p>To tidy up the data I had to alter the corona data so that all the country’s would be under one column instead of them all haing their own columns. Once all the country’s were in the same column I had to make sure that the format for the date columns on both datasets matched. The reason the formats had to match was because this was the variable that I will be using to join the two datasets.</p>
+<pre class="r"><code>crtidy &lt;- crdat %&gt;%
+  pivot_longer(
+    cols = Mainland.China:United.States,
+    names_to = &quot;Country&quot;,
+    values_to = &quot;infc_rate&quot;
+  ) %&gt;%
+  separate(X, into = c(&quot;Month&quot;, &quot;Day&quot;), sep = &quot;/&quot;) %&gt;%
+  add_column(Year = 2020) %&gt;%
+  add_column(yick = &quot;Corona&quot;) %&gt;%
+  unite(Year, Month, Day, col = &quot;Date&quot;, sep = &quot;-&quot;) %&gt;%
+  unite(yick, Country, col = &quot;Cont&quot;, sep = &quot;-&quot;)
+
+ebtidy &lt;- ebdat %&gt;%
+  rename(infc_rate = value) %&gt;%
+  add_column(oh = &quot;Ebola&quot;) %&gt;%
+  unite(oh, Country, col = &quot;Cont&quot;, sep = &quot;-&quot;) %&gt;%
+  filter(Indicator == &quot;Cumulative number of confirmed Ebola cases&quot;) %&gt;%
+  select(-Indicator)
+
+glimpse(crtidy)</code></pre>
+<pre><code>## Observations: 630
+## Variables: 3
+## $ Date      &lt;chr&gt; &quot;2020-02-08&quot;, &quot;2020-02-08&quot;, &quot;2020-02-08&quot;, &quot;2020-02-08&quot;, &quot;20…
+## $ Cont      &lt;chr&gt; &quot;Corona-Mainland.China&quot;, &quot;Corona-Others&quot;, &quot;Corona-Singapore…
+## $ infc_rate &lt;int&gt; 37198, 61, 40, 32, 26, 25, 25, 17, 16, 13, 13, 11, 10, 7, 1…</code></pre>
+<pre class="r"><code>glimpse(ebtidy)</code></pre>
+<pre><code>## Observations: 2,484
+## Variables: 3
+## $ Cont      &lt;chr&gt; &quot;Ebola-Guinea&quot;, &quot;Ebola-Liberia&quot;, &quot;Ebola-Sierra Leone&quot;, &quot;Ebo…
+## $ Date      &lt;fct&gt; 2015-03-10, 2015-03-10, 2015-03-10, 2015-03-10, 2015-03-10,…
+## $ infc_rate &lt;dbl&gt; 2871, 3150, 8428, 1, 7, 19, 1, 1, 4, 1, 2840, 3150, 8389, 7…</code></pre>
+<hr />
+<p><br></p>
+</div>
+<div id="joining-datasets" class="section level1">
+<h1>Joining Datasets:</h1>
+<p>After joining the data sets I seperated the date column into year, month, and day variables since a lot of the analysis will require the isolation of the year. There are other tweeks as well to make the data join together more fuidly as seen in the code below.</p>
+<pre class="r"><code>pandemic1 &lt;- ebtidy %&gt;%
+  full_join(crtidy) %&gt;%
+  separate(Date, into = c(&quot;year&quot;, &quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) %&gt;%
+  separate(Cont,  into = c(&quot;virus&quot;, &quot;country&quot;),sep=&quot;-&quot;) %&gt;%
+  mutate(country = recode(country, 
+                          &quot;South.Korea&quot; = &quot;South Korea&quot;, 
+                          &quot;Mainland.China&quot; = &quot;China&quot;,
+                          &quot;United States of America&quot; = &quot;USA&quot;,
+                          &quot;United.States&quot; = &quot;USA&quot;,
+                          &quot;United.Arab.Emirates&quot; = &quot;United Arab Emirates&quot;,
+                          &quot;Sri.Lanka&quot; = &quot;Sri Lanka&quot;,
+                          &quot;Hong.Kong&quot; = &quot;Hong Kong&quot;,
+                          &quot;Ivory.Coast&quot; = &quot;Ivory Coast&quot;,
+                          &quot;Guinea 2&quot; = &quot;Guinea&quot;,
+                          &quot;Liberia 2&quot; = &quot;Liberia&quot;))
+
+glimpse(pandemic1)</code></pre>
+<pre><code>## Observations: 3,114
+## Variables: 6
+## $ virus     &lt;chr&gt; &quot;Ebola&quot;, &quot;Ebola&quot;, &quot;Ebola&quot;, &quot;Ebola&quot;, &quot;Ebola&quot;, &quot;Ebola&quot;, &quot;Ebol…
+## $ country   &lt;chr&gt; &quot;Guinea&quot;, &quot;Liberia&quot;, &quot;Sierra Leone&quot;, &quot;United Kingdom&quot;, &quot;Mal…
+## $ year      &lt;chr&gt; &quot;2015&quot;, &quot;2015&quot;, &quot;2015&quot;, &quot;2015&quot;, &quot;2015&quot;, &quot;2015&quot;, &quot;2015&quot;, &quot;20…
+## $ month     &lt;chr&gt; &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;, &quot;03&quot;,…
+## $ day       &lt;chr&gt; &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;10&quot;, &quot;06&quot;,…
+## $ infc_rate &lt;dbl&gt; 2871, 3150, 8428, 1, 7, 19, 1, 1, 4, 1, 2840, 3150, 8389, 7…</code></pre>
+<hr />
+<p><br></p>
+</div>
+<div id="wrangling" class="section level1">
+<h1>Wrangling:</h1>
+<p>Specific data was pulled from the pandemic dataset to better understand the patterns or lack of patterns between the two viruses and how they spread.</p>
+<p><br></p>
+<div id="table-1" class="section level3">
+<h3>Table 1</h3>
+<p><em>Table 1 displays the total number of viruses, country’s, and years that this data spans over. This is just a vauge overview of the kind of information this dataset presents.</em></p>
+<hr />
+<pre class="r"><code>pandemic1 %&gt;%
+  select(-infc_rate, -day, -month) %&gt;%
+  summarise_all(n_distinct)</code></pre>
+<pre><code>##   virus country year
+## 1     2      41    4</code></pre>
+<p><br><br></p>
+</div>
+<div id="table-2" class="section level3">
+<h3>Table 2</h3>
+<p><em>In Table 2 we can get a closer look into the year, month and type of virus that is infecting people, this is a more detailed look at the data from Table 1. We can observe that there are two types of viruses and we can follow how many countries have people infected by the virus in their respective year and month. For example we can tell through this table that the first record of the ebola outbreak was in August 2014 and had cases in 4 different countries.</em></p>
+<hr />
+<pre class="r"><code>pandemic1 %&gt;%
+  group_by(year, month, virus) %&gt;%
+  summarise_all(n_distinct) %&gt;%
+  select(year, month, virus, country)</code></pre>
+<pre><code>## # A tibble: 20 x 4
+## # Groups:   year, month [20]
+##    year  month virus  country
+##    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;    &lt;int&gt;
+##  1 2014  08    Ebola        4
+##  2 2014  09    Ebola        5
+##  3 2014  10    Ebola        8
+##  4 2014  11    Ebola        8
+##  5 2014  12    Ebola        8
+##  6 2015  01    Ebola        9
+##  7 2015  02    Ebola        9
+##  8 2015  03    Ebola        9
+##  9 2015  04    Ebola        9
+## 10 2015  05    Ebola       10
+## 11 2015  06    Ebola       10
+## 12 2015  07    Ebola       10
+## 13 2015  08    Ebola       10
+## 14 2015  09    Ebola       10
+## 15 2015  10    Ebola       10
+## 16 2015  11    Ebola       10
+## 17 2015  12    Ebola       10
+## 18 2016  03    Ebola       10
+## 19 2020  01    Corona      34
+## 20 2020  02    Corona      34</code></pre>
+<p><br><br></p>
+</div>
+<div id="table-3" class="section level3">
+<h3>Table 3</h3>
+<p><em>Table 3 gives us a different insight to the information that the pandemic dataset offers. In the previous tables there was information about how the viruses spread over the course of time, but Table 3 displays the highst number of known infected cases in a particular country based on the year. We can tell that out of the two viruses the Corona virus seems to have a higher infection count that ebola in the very short amount of time that it has been known to the public.</em></p>
+<hr />
+<pre class="r"><code>pandemic1 %&gt;%
+  group_by(country, year, virus) %&gt;%
+  summarise(total_infc = max(infc_rate)) %&gt;%
+  arrange(desc(total_infc))</code></pre>
+<pre><code>## # A tibble: 62 x 4
+## # Groups:   country, year [62]
+##    country      year  virus  total_infc
+##    &lt;chr&gt;        &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+##  1 China        2020  Corona      37198
+##  2 Sierra Leone 2015  Ebola        8704
+##  3 Sierra Leone 2016  Ebola        8704
+##  4 Sierra Leone 2014  Ebola        7354
+##  5 Guinea       2015  Ebola        3351
+##  6 Guinea       2016  Ebola        3351
+##  7 Liberia      2015  Ebola        3153
+##  8 Liberia      2016  Ebola        3151
+##  9 Liberia      2014  Ebola        3110
+## 10 Guinea       2014  Ebola        2397
+## # … with 52 more rows</code></pre>
+<p><br><br></p>
+</div>
+<div id="table-4" class="section level3">
+<h3>Table 4</h3>
+<p><em>This table shows the average number of infected people for both virus during a specific year over based on the number of countries that have infected cases. Ebola has a higher average infection, 1480 people at its hightest (2016), since it has data from a span of three years and didn’t spread to a total of 10 countries by 2016. On the other hand, Corona only has data from two months and is hitting an average of 392 people over a span of 34 countries. If we were to compile more recent data we might have witnessed a much larger average infection rate.</em></p>
+<hr />
+<pre class="r"><code>pandemic1 %&gt;%
+  group_by(virus, year) %&gt;%
+  summarise(avg_spread = mean(infc_rate), countries = n_distinct(country))</code></pre>
+<pre><code>## # A tibble: 4 x 4
+## # Groups:   virus [2]
+##   virus  year  avg_spread countries
+##   &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt;     &lt;int&gt;
+## 1 Corona 2020        391.        34
+## 2 Ebola  2014       1085.         8
+## 3 Ebola  2015       1480.        10
+## 4 Ebola  2016       1271.        10</code></pre>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="visualizing" class="section level1">
+<h1>Visualizing:</h1>
+<p>For the sake of the visualization I reassigned the numbers in the month column to include the name of the month to make it easier to decipher when reading the graphs.</p>
+<pre class="r"><code>pandemic2 &lt;- pandemic1 %&gt;%
+  mutate(month = recode(month,
+                        &quot;01&quot; = &quot;01.January&quot;,
+                        &quot;02&quot; = &quot;02.February&quot;,
+                        &quot;03&quot; = &quot;03.March&quot;,
+                        &quot;04&quot; = &quot;04.April&quot;,
+                        &quot;05&quot; = &quot;05.May&quot;,
+                        &quot;06&quot; = &quot;06.June&quot;,
+                        &quot;07&quot; = &quot;07.July&quot;,
+                        &quot;08&quot; = &quot;08.August&quot;,
+                        &quot;09&quot; = &quot;09.September&quot;,
+                        &quot;10&quot; = &quot;10.October&quot;,
+                        &quot;11&quot; = &quot;11.November&quot;,
+                        &quot;12&quot; = &quot;12.December&quot;))</code></pre>
+<hr />
+<p><br></p>
+<div id="graph-1" class="section level3">
+<h3>Graph 1</h3>
+<p><em>Graph 1 shows how many people ebola and corona infected each month based on the year. The corona graph shows a much higher number of infected cases comared to the ebola data for the two months that it has been present. There are also several points per month which is for the countries with infected cases, and the darker the spot just indicated that there is more than one country with that same number of infected people. For the corona virus there is a really dense circle close to zero in February, and that’s because there were several countries that discovered their first cases that month. While for the ebola virus, in 2014 there was a rise of the virus as it started to infect people and spead, but then in 2015 and 2016 it becomes static and starts decreasing around February of 2016 where the mosst dense point is close to zero.</em></p>
+<hr />
+<pre class="r"><code>pandemic2 %&gt;%
+  ggplot(aes(month, infc_rate, fill = year)) +
+  geom_point(size = 4, shape = 21, alpha = 0.5) +
+  facet_wrap(~virus) +
+  xlab(&quot;Month&quot;) +
+  theme(axis.text.x = element_text(angle=65, vjust = 0.6)) +
+  ylab(&quot;Number of People Infected&quot;) +
+  ggtitle(&quot;Infection Spread for Corona vs Ebola&quot;) +
+  scale_fill_brewer(palette = &quot;Spectral&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><br><br></p>
+</div>
+<div id="graph-2" class="section level3">
+<h3>Graph 2</h3>
+<p><em>This is a really simple graph that just shows the max number of countries were infected by which virus based on the year. When you hover over the bars it will tell you the max number and which virus it is! It can be noted that for corona the number is 34 and for ebola it is 10. This information shows how much faster corona is spreading compared to ebola. Corona is a more sneaky virus, making it harder to identify and isolate compared to ebola which was isolated relatively quickly if it only infected a total of 10 counties in the span of three years.</em></p>
+<hr />
+<pre class="r"><code>c &lt;- pandemic2 %&gt;%
+  group_by(country, year, virus) %&gt;%
+  summarise(total_infc = max(infc_rate)) %&gt;%
+  arrange(desc(total_infc)) %&gt;% 
+  ggplot(aes(year, fill = virus)) +
+  geom_bar() +
+  xlab(&quot;Year&quot;) +
+  ylab(&quot;Number of Countries&quot;) +
+  ggtitle(&quot;Total Number of Countries Effected by Viruses&quot;) +
+  theme(legend.position=&quot;none&quot;)
+
+ggplotly(c)</code></pre>
+<div id="htmlwidget-1" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"data":[{"orientation":"v","width":0.9,"base":0,"x":[4],"y":[34],"text":"count: 34<br />year: 2020<br />virus: Corona","type":"bar","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"Corona","legendgroup":"Corona","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9,0.9],"base":[0,0,0],"x":[1,2,3],"y":[8,10,10],"text":["count:  8<br />year: 2014<br />virus: Ebola","count: 10<br />year: 2015<br />virus: Ebola","count: 10<br />year: 2016<br />virus: Ebola"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"Ebola","legendgroup":"Ebola","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":43.7625570776256,"r":7.30593607305936,"b":40.1826484018265,"l":37.2602739726027},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":{"text":"Total Number of Countries Effected by Viruses","font":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,4.6],"tickmode":"array","ticktext":["2014","2015","2016","2020"],"tickvals":[1,2,3,4],"categoryorder":"array","categoryarray":["2014","2015","2016","2020"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"Year","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1.7,35.7],"tickmode":"array","ticktext":["0","10","20","30"],"tickvals":[2.22044604925031e-16,10,20,30],"categoryorder":"array","categoryarray":["0","10","20","30"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"Number of Countries","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"6f547f66d625":{"x":{},"fill":{},"type":"bar"}},"cur_data":"6f547f66d625","visdat":{"6f547f66d625":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="graph-3" class="section level3">
+<h3>Graph 3</h3>
+<p><em>Graph 3 allows us to really disect the spread of a perticular virus in a specific county to see the rate at wich it spreads. It shows the number of infected people in Guinea for each month throughout the years that there were ebola cases! When you hover over the bars it shows what the max number of infected individuals there were and what month this number was recorded. It shows how in 2015 it stagnated at 3351 people in November and stayed that way till March of 201. </em></p>
+<hr />
+<pre class="r"><code>guineaGraph &lt;- pandemic2 %&gt;%
+  filter(country == &quot;Guinea&quot;) %&gt;%
+  group_by(year, month) %&gt;%
+  summarise(max_count = max(infc_rate))
+
+g &lt;- ggplot(guineaGraph, aes(x=year, y=max_count, fill= month)) + 
+  geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;) +
+  ylab(&quot;Number of People Infected&quot;) +
+  xlab(&quot;Year&quot;) +
+  ggtitle(&quot;Ebola Infections in Guinea&quot;) +
+  theme(legend.position=&quot;none&quot;)
+
+ggplotly(g)</code></pre>
+<div id="htmlwidget-2" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"data":[{"orientation":"v","width":0.0750000000000002,"base":0,"x":[1.5875],"y":[2575],"text":"year: 2015<br />max_count: 2575<br />month: 01.January","type":"bar","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"01.January","legendgroup":"01.January","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.0750000000000002,"base":0,"x":[1.6625],"y":[2790],"text":"year: 2015<br />max_count: 2790<br />month: 02.February","type":"bar","marker":{"autocolorscale":false,"color":"rgba(222,140,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"02.February","legendgroup":"02.February","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.0750000000000002,0.9],"base":[0,0],"x":[1.7375,3],"y":[3042,3351],"text":["year: 2015<br />max_count: 3042<br />month: 03.March","year: 2016<br />max_count: 3351<br />month: 03.March"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(183,159,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"03.March","legendgroup":"03.March","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.0750000000000002,"base":0,"x":[1.8125],"y":[3159],"text":"year: 2015<br />max_count: 3159<br />month: 04.April","type":"bar","marker":{"autocolorscale":false,"color":"rgba(124,174,0,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"04.April","legendgroup":"04.April","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.0750000000000002,"base":0,"x":[1.8875],"y":[3216],"text":"year: 2015<br />max_count: 3216<br />month: 05.May","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,186,56,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"05.May","legendgroup":"05.May","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.0750000000000002,"base":0,"x":[1.9625],"y":[3269],"text":"year: 2015<br />max_count: 3269<br />month: 06.June","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,192,139,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"06.June","legendgroup":"06.June","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":0.0750000000000002,"base":0,"x":[2.0375],"y":[3326],"text":"year: 2015<br />max_count: 3326<br />month: 07.July","type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"07.July","legendgroup":"07.July","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.18,0.0750000000000002],"base":[0,0],"x":[0.64,2.1125],"y":[482,3337],"text":["year: 2014<br />max_count:  482<br />month: 08.August","year: 2015<br />max_count: 3337<br />month: 08.August"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(0,180,240,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"08.August","legendgroup":"08.August","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.18,0.0750000000000002],"base":[0,0],"x":[0.82,2.1875],"y":[876,3344],"text":["year: 2014<br />max_count:  876<br />month: 09.September","year: 2015<br />max_count: 3344<br />month: 09.September"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(97,156,255,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"09.September","legendgroup":"09.September","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.18,0.0750000000000002],"base":[0,0],"x":[1,2.2625],"y":[1409,3350],"text":["year: 2014<br />max_count: 1409<br />month: 10.October","year: 2015<br />max_count: 3350<br />month: 10.October"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(199,124,255,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"10.October","legendgroup":"10.October","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.18,0.0750000000000002],"base":[0,0],"x":[1.18,2.3375],"y":[1850,3351],"text":["year: 2014<br />max_count: 1850<br />month: 11.November","year: 2015<br />max_count: 3351<br />month: 11.November"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(245,100,227,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"11.November","legendgroup":"11.November","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.18,0.0750000000000002],"base":[0,0],"x":[1.36,2.4125],"y":[2397,3351],"text":["year: 2014<br />max_count: 2397<br />month: 12.December","year: 2015<br />max_count: 3351<br />month: 12.December"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(255,100,176,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"12.December","legendgroup":"12.December","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":43.7625570776256,"r":7.30593607305936,"b":40.1826484018265,"l":48.9497716894977},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":{"text":"Ebola Infections in Guinea","font":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,3.6],"tickmode":"array","ticktext":["2014","2015","2016"],"tickvals":[1,2,3],"categoryorder":"array","categoryarray":["2014","2015","2016"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":{"text":"Year","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-167.55,3518.55],"tickmode":"array","ticktext":["0","1000","2000","3000"],"tickvals":[0,1000,2000,3000],"categoryorder":"array","categoryarray":["0","1000","2000","3000"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":{"text":"Number of People Infected","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"6f541aef6d64":{"x":{},"y":{},"fill":{},"type":"bar"}},"cur_data":"6f541aef6d64","visdat":{"6f541aef6d64":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="clustering" class="section level1">
+<h1>Clustering</h1>
+<p>This shows how the virus data compares to each other by comparing the number of infections per year for ebola and corona. This data was a bit hard to cluster and compare since the two viruses did not occur in simial time frames and didn’t have too many overlapping countries they effected, especially because corona spread aobut 3x more than ebola. This data does show how the ebola data clusters through out the years in which they all have very low correlations. <br></p>
+<div id="pairwise-combinations" class="section level3">
+<h3>Pairwise Combinations</h3>
+<pre class="r"><code>endgame &lt;- pandemic1 %&gt;%
+  select(-month, -country, -day) %&gt;%
+  group_by(year) %&gt;%
+  mutate(rn = row_number()) %&gt;%
+  pivot_wider(names_from = year, values_from = infc_rate) %&gt;%
+  mutate_all(~replace(., is.na(.), 0))
+
+
+viCluster &lt;- endgame %&gt;%
+  select(-virus, -rn) %&gt;%
+  pam(4)
+
+viCluster</code></pre>
+<pre><code>## Medoids:
+##        ID 2015 2014 2016  2020
+## [1,]  445 3151    0    0     0
+## [2,] 1047 8665    0    0     0
+## [3,]  265    1    0    0     0
+## [4,] 2349    0    0    0 24290
+## Clustering vector:
+##   [1] 1 1 2 3 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 3 3 3 3 3 1 1 2 3
+##  [38] 1 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 1
+##  [75] 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3 1 1 2 3 3 3 3 3 3
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 2738 entries ]
+## Objective function:
+##    build     swap 
+## 173.1463 164.6451 
+## 
+## Available components:
+##  [1] &quot;medoids&quot;    &quot;id.med&quot;     &quot;clustering&quot; &quot;objective&quot;  &quot;isolation&quot; 
+##  [6] &quot;clusinfo&quot;   &quot;silinfo&quot;    &quot;diss&quot;       &quot;call&quot;       &quot;data&quot;</code></pre>
+<pre class="r"><code>viFinal &lt;- endgame %&gt;%
+  mutate(cluster=as.factor(viCluster$clustering))
+
+ggpairs(viFinal, columns = 3:6, aes(color = virus))</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><br></p>
+<p><em>We can even run a silhouette plot for the clusters of the four variables that are being compared to see how related they are to each other.</em></p>
+<p><br></p>
+</div>
+<div id="silhouette-plot" class="section level3">
+<h3>Silhouette plot</h3>
+<pre class="r"><code>plot(viCluster, which = 1)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This plot shows us that there is a low correlation between the year variables based on the infections, about %57 which. The only correlation that is shown is what is between 2014-2016 because those are the years that had ebola data allowing it to be compared.</p>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="overall-analysis" class="section level1">
+<h1>Overall Analysis</h1>
+<p>This project was super fun to organize all the data; there’s a lot more that could be done but then this would have been a really long read. I think this would be really great to come back to by the end of 2020 when there will be more information on the corona virus and more data to work with. It would allow a better comparison to ebola especially to look at the spread. Another thing is if there was more information, it would give data about deaths involved with the virus. I think that would also be usuful to compare the two viruses to see the deadliness of each virus, it would also make a much nicer clusters to look at.</p>
+</div>

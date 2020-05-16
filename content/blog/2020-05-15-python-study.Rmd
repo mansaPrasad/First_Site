@@ -1,0 +1,9 @@
+---
+title: Python Study
+author: ''
+date: '2020-05-15'
+slug: python-study
+categories: []
+tags: []
+description: ''
+---

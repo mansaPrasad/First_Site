@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Mansa Prasad" />
+    <meta name="description" content="Describe your website">
+    <link rel="shortcut icon" type="image/x-icon" href="../img/favicon.ico">
+    <title>Mansa Prasad Project 2</title>
+    <meta name="generator" content="Hugo 0.70.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../blog/">BLOG</a></li>
+        
+        <li><a href="../projects/">PROJECTS</a></li>
+        
+        <li><a href="../resume.pdf">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../project2/">Mansa Prasad Project 2</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          January 1, 0001
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<hr />
+<p><br><br></p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>I decided to work with halloween candy data for this project since it seemed fun, it’s about what kind of candy people would like to recieve during halloween. This data set has 13 variables, most of which are categorical variables that are already sorted with 0’s and 1’s to represent if they do or don’t have the variable listed. They surveyed 85 types of candy, thus there are 85 observations. The categorical variable that I’m particularly interested in are <em>chocolate</em>, I might also look into some of the other categorical vaireables in addition to the main ones I’m focusing on. There are three numerical variables in this dataset, <em>sugarpecent</em>, which is the percentile of sugar it falls under within the data set, <em>pricepercent</em>, which is the unit price percentile compared to the rest of the set, and <em>winpercent</em>, which is the overall win percentage according to 269,000 votes. I was a little unclear on the win percent variable so I looked futher into it and figured out it was how often that particular candy was chosen as the prefered candy to recieve during halloween.</p>
+<hr />
+<div id="packages" class="section level3">
+<h3>Packages</h3>
+<pre class="r"><code>library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lmtest)
+library(glmnet)
+library(sandwich)
+library(plotROC)
+library(vegan)</code></pre>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="dataset" class="section level1">
+<h1>DataSet:</h1>
+<p>This is the halloween candy dataset that I used!</p>
+<pre class="r"><code>candy &lt;- read.csv(&quot;https://raw.githubusercontent.com/fivethirtyeight/data/master/candy-power-ranking/candy-data.csv&quot;)
+
+glimpse(candy)</code></pre>
+<pre><code>## Observations: 85
+## Variables: 13
+## $ competitorname   &lt;fct&gt; 100 Grand, 3 Musketeers, One dime, One quarter, Air …
+## $ chocolate        &lt;int&gt; 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0…
+## $ fruity           &lt;int&gt; 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1…
+## $ caramel          &lt;int&gt; 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ peanutyalmondy   &lt;int&gt; 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ nougat           &lt;int&gt; 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0…
+## $ crispedricewafer &lt;int&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ hard             &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1…
+## $ bar              &lt;int&gt; 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0…
+## $ pluribus         &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1…
+## $ sugarpercent     &lt;dbl&gt; 0.732, 0.604, 0.011, 0.011, 0.906, 0.465, 0.604, 0.3…
+## $ pricepercent     &lt;dbl&gt; 0.860, 0.511, 0.116, 0.511, 0.511, 0.767, 0.767, 0.5…
+## $ winpercent       &lt;dbl&gt; 66.97173, 67.60294, 32.26109, 46.11650, 52.34146, 50…</code></pre>
+<hr />
+<p><br></p>
+</div>
+<div id="manova" class="section level1">
+<h1>MANOVA:</h1>
+<p>For the MANOVA I’m checking the sugar percentage and the price percentage of the halloween candies based if the candy has chocolate in it or not.</p>
+<pre class="r"><code># Creating a MANOVA variable
+candyman &lt;- manova(cbind(sugarpercent, pricepercent)~chocolate, data = candy)
+summary(candyman)</code></pre>
+<pre><code>##           Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## chocolate  1 0.25904   14.334      2     82 4.587e-06 ***
+## Residuals 83                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code># Checking mean differences compared to the categorical variable 
+candy %&gt;%
+  group_by(chocolate) %&gt;%
+  summarise(mean(sugarpercent), mean(pricepercent))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   chocolate `mean(sugarpercent)` `mean(pricepercent)`
+##       &lt;int&gt;                &lt;dbl&gt;                &lt;dbl&gt;
+## 1         0                0.453                0.343
+## 2         1                0.512                0.632</code></pre>
+<pre class="r"><code># Univariate ANOVA based on the MANOVA object. 
+summary.aov(candyman)</code></pre>
+<pre><code>##  Response sugarpercent :
+##             Df Sum Sq  Mean Sq F value Pr(&gt;F)
+## chocolate    1 0.0729 0.072887  0.9105 0.3427
+## Residuals   83 6.6440 0.080049               
+## 
+##  Response pricepercent :
+##             Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## chocolate    1 1.7468 1.74680  28.364 8.434e-07 ***
+## Residuals   83 5.1116 0.06158                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code># Post-hoc t test 
+pairwise.t.test(candy$pricepercent, candy$chocolate, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  candy$pricepercent and candy$chocolate 
+## 
+##   0      
+## 1 8.4e-07
+## 
+## P value adjustment method: none</code></pre>
+<p>My data that I chose to perform a MANOVA with doesn’t have that big of a mean difference between the variables, but I chose to run a univariate ANOVAs just to make sure that the means really aren’t too differnt. There was at least one significant difference among the the candy being chocolate or not for at least one of the dependent variables. When the univariate ANOVA was run, the variable that had a significant differnce was the price percent variable where the p &lt; 0.05. When the post hoc analysis was performed conducting pairwise comparisons to determine which chocolate prefernce differed in the price percent it showed me that they both differ signigicantly in terms of price percent.</p>
+<hr />
+<p><br></p>
+<div id="randomization-test" class="section level2">
+<h2>Randomization test</h2>
+<p>I had to run a PERMANOVA as my randomization test since my original data was from an MANOVA so this was the most logical choice. For this I’m comparing the chocolate variable to the sugar and price percent depending on if the candy is chocolate or not!</p>
+<pre class="r"><code># Do a PERMANOVA
+sugaMoni &lt;- candy %&gt;%
+  select(sugarpercent, pricepercent) %&gt;%
+  dist()
+
+adonis(sugaMoni~chocolate, data=candy)</code></pre>
+<pre><code>## 
+## Call:
+## adonis(formula = sugaMoni ~ chocolate, data = candy) 
+## 
+## Permutation: free
+## Number of permutations: 999
+## 
+## Terms added sequentially (first to last)
+## 
+##           Df SumsOfSqs MeanSqs F.Model      R2 Pr(&gt;F)    
+## chocolate  1    1.8197 1.81969  12.848 0.13404  0.001 ***
+## Residuals 83   11.7556 0.14163         0.86596           
+## Total     84   13.5753                 1.00000           
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>#compute observed F
+SST &lt;- sum(sugaMoni^2)/85
+
+SSW &lt;- candy%&gt;%
+  group_by(chocolate)%&gt;%
+  select(sugarpercent, pricepercent)%&gt;%
+  do(d = dist(.[1:2],&quot;euclidean&quot;))%&gt;% 
+  ungroup()%&gt;%
+  summarize(sum(d[[1]]^2)/50 + 
+            sum(d[[2]]^2)/50)%&gt;% 
+  pull
+
+F_obs&lt;-((SST-SSW)/1)/(SSW/83) #observed F statistic
+
+
+# compute null distribution for F
+Fs &lt;- replicate(1000,{
+new &lt;- candy %&gt;%
+  mutate(chocolate=sample(chocolate)) 
+
+SSW &lt;- new %&gt;%
+  group_by(chocolate) %&gt;%
+  select(sugarpercent, pricepercent) %&gt;%
+  do(d = dist(.[1:2],&quot;euclidean&quot;)) %&gt;%
+  ungroup() %&gt;%
+  summarize(sum(d[[1]]^2)/50 + sum(d[[2]]^2)/50) %&gt;%
+  pull
+
+((SST-SSW)/1)/(SSW/83)
+
+})
+
+{hist(Fs,prob = T); abline(v=F_obs, col=&quot;red&quot;, add=T)}</code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># p- value
+mean(Fs&gt;F_obs)</code></pre>
+<pre><code>## [1] 0.973</code></pre>
+<p>H0: mean sugar % for chocolate = mean sugar % for non chocolate = mean price % for chocolate = mean price % for non chocolate HA: at least one of these means differs from the others The results of this test shows me that I get the same conclution as my MANOVA results and we reject the null hypothesis since the p value is so small.</p>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="linear-regression-model" class="section level1">
+<h1>Linear Regression Model</h1>
+<p><br></p>
+<p>Using the candy data set I’m going to compare the unite price of the Halloween candy to the preference of each candy, based on if it’s chocolate or not, chosen by the people who took this survey to see if there is a linear relationship. My response variable will be the price, thus my regression will be predicting the <em>pricePercent</em> from the <em>winPercent</em> and <em>chocolate</em> variables.</p>
+<pre class="r"><code># Mean centering the data
+candy$winpercent_c &lt;- candy$winpercent - mean(candy$winpercent)
+candy$pricepercent_c &lt;- candy$pricepercent - mean(candy$pricepercent)
+
+# Linear model
+candylm &lt;- lm(pricepercent_c ~ winpercent_c + chocolate, 
+              data = candy)
+summary(candylm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = pricepercent_c ~ winpercent_c + chocolate, data = candy)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.60922 -0.19107 -0.01023  0.16485  0.64847 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  -0.1194325  0.0410060  -2.913 0.004617 ** 
+## winpercent_c  0.0007865  0.0023988   0.328 0.743858    
+## chocolate     0.2743720  0.0707735   3.877 0.000212 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2495 on 82 degrees of freedom
+## Multiple R-squared:  0.2557, Adjusted R-squared:  0.2375 
+## F-statistic: 14.08 on 2 and 82 DF,  p-value: 5.525e-06</code></pre>
+<pre class="r"><code># Plotting the regression
+
+candy$chocolate1 &lt;-factor(candy$chocolate,
+                        levels=c(&quot;1&quot;,&quot;0&quot;))
+
+candy %&gt;%
+  ggplot(aes(pricepercent_c, winpercent_c)) +
+  geom_point(aes(color = chocolate1)) +
+  geom_smooth(method = &quot;lm&quot;, se = F, aes(color=chocolate1)) +
+  ggtitle(&quot;Mean Centered Unit Price vs Preference of Chocolate for Halloween&quot;) +
+  xlab(&quot;Price Percentile&quot;) +
+  ylab(&quot;Preference Percentile&quot;) </code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><br></p>
+<p>As seen in this plot above there is a lot of information being thrown around! first we can take a look at the linear regression table where it shows us that the intercept coefficient is -0.119, which lets us know that when the price point is 0 the preference of candy that people have is 0 which makes logical sense. People can’t want something if there’s nothing offered. The coefficient for win percent which is at 0.0007 basically meaning there is no increased preference of candy type based on price. On the other hand, the coefficient for chocolate was 0.27, meaning that the preference of chocolate candy’s increase the price of those chocolates also increase! It’s really interesting to see how there is a stonger preference (win percent) for chocolate as the type of candy being recieved for halloween compared to non-chocolate candy’s. We can also see that based on the particular chocolates chosen the price also increases in comparison to the other candy’s. Based on this information we can see that there is a correlation between the mean prefernece of chocolate candy and their mean cost for this halloween survey.</p>
+<hr />
+<p><br></p>
+<pre class="r"><code>resids &lt;- candylm$residuals
+candyfits &lt;- candylm$fitted.values
+
+# Normality check with Shapiro-Wilk test
+shapiro.test(resids)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.98695, p-value = 0.5529</code></pre>
+<pre class="r"><code># Histogram for normality
+ggplot()+geom_histogram(aes(resids),bins=20)</code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Checking variance with residual values
+
+ggplot()+
+  geom_point(aes(candyfits, resids)) +
+  geom_hline(yintercept = 0, color = &quot;red&quot;)</code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><br></p>
+<p>In this case the p-value from the Shapiro-Wilk is greater thatn 0.05 which would indicate that this relationship does follow normality, and this is backed up with the histogram which shows an ached bellcurve type shape, proving that this relationship is pretty normal. The residual plot allows us to see homoskedaticity which apprears as two groups which represent chocolate vs non-chocolate candy, both which are ok and follow homoskedaticity.</p>
+<hr />
+<p><br></p>
+<pre class="r"><code># Robust standard errors
+bptest(candylm)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  candylm
+## BP = 9.7851, df = 2, p-value = 0.007502</code></pre>
+<pre class="r"><code>coeftest(candylm, vcov = vcovHC(candylm))</code></pre>
+<pre><code>## 
+## t test of coefficients:
+## 
+##                 Estimate  Std. Error t value Pr(&gt;|t|)   
+## (Intercept)  -0.11943254  0.03866965 -3.0885 0.002745 **
+## winpercent_c  0.00078647  0.00287763  0.2733 0.785307   
+## chocolate     0.27437205  0.08371439  3.2775 0.001537 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>According to the Breusch-Pagan test normality is met since the p-value is barely over 0.05 meaning there is a significance differnce in the variables. When looking at the coefficients for the robust standard error we can tell that there is not much of a difference from the uncorrected SE values! The uncorrected values were: 0.041(intercept), 0.0024(winpercent), and 0.07(chocolate), the corrected values were:0.038(intercept), 0.0028(winpercent), and 0.08(chocolate).</p>
+<p>Additionally, the proportion of the variation explained by the outcome from my model was 0.2375 which means that the price isn’t really explaining the variation of the win percent or chocolate regardless of significance.</p>
+<hr />
+<p><br></p>
+<div id="bootstrapping" class="section level2">
+<h2>Bootstrapping</h2>
+<pre class="r"><code># Creating a variable that repeat 5000 times
+samp_distn&lt;-replicate(5000, {
+  boot_candy &lt;- sample_frac(candy, replace=T) 
+  candylm1 &lt;- lm(pricepercent_c~winpercent_c + chocolate1, data = boot_candy) 
+  coef(candylm1) 
+})
+
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept) winpercent_c chocolate10
+## 1  0.05920735  0.002754613  0.08183331</code></pre>
+<p>The bootstrapped SE values are differnt from the roburst and original values, the intercept value for the bootstrap is 0.058 which is higher than the other two which were 0.41 and 0.38, the mean adjusted win percent is 0.0027 which is close to the roburst value which was 0.0028, and the chocolate value is basically in between the other two at 0.079.</p>
+<hr />
+<p><br></p>
+</div>
+</div>
+<div id="logistic-regression" class="section level1">
+<h1>Logistic Regression</h1>
+<div id="predicting-binary-category" class="section level3">
+<h3>Predicting Binary Category</h3>
+<pre class="r"><code>candyfit &lt;- glm(chocolate~sugarpercent+pricepercent, 
+                data = candy, 
+                family = binomial(link = &quot;logit&quot;))
+summary(candyfit)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = chocolate ~ sugarpercent + pricepercent, family = binomial(link = &quot;logit&quot;), 
+##     data = candy)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.1365  -0.7748  -0.5028   0.9536   2.1508  
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -2.1415     0.6378  -3.358 0.000786 ***
+## sugarpercent  -0.6739     0.9893  -0.681 0.495764    
+## pricepercent   4.5583     1.1055   4.123 3.73e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 116.407  on 84  degrees of freedom
+## Residual deviance:  92.346  on 82  degrees of freedom
+## AIC: 98.346
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>exp(coef(candyfit))</code></pre>
+<pre><code>##  (Intercept) sugarpercent pricepercent 
+##    0.1174736    0.5097151   95.4229678</code></pre>
+<pre class="r"><code>probs &lt;- predict(candyfit, type = &quot;response&quot;)</code></pre>
+<p><br></p>
+<p>The coefficients of candyfit shows the log odds of the variables that are being compared to chocolate. We can take the exponentiate coeffecients to look at the odds ratios. This shows me that at the lowest sugar and price percent the odds of the candy being chocolate is at 0.117. For sugarpercent when we control the price percent, the percent increase results the odds of the candy being chocolate increase by a factor of 0.51. For pricepercent when we control the sugar percent, the percent increase results the odds of the candy being chocolate increase by a factor of 95.42.</p>
+<hr />
+<p><br></p>
+<pre class="r"><code># Confution matrix
+table(truth = candy$chocolate,
+      prediction = as.numeric(probs&gt; 0.5)) %&gt;%
+  addmargins()</code></pre>
+<pre><code>##      prediction
+## truth  0  1 Sum
+##   0   40  8  48
+##   1   12 25  37
+##   Sum 52 33  85</code></pre>
+<pre class="r"><code>class_diag &lt;- function(probs,truth){
+  tab &lt;- table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+  acc = sum(diag(tab))/sum(tab)
+  sens = tab[2,2]/colSums(tab)[2]
+  spec = tab[1,1]/colSums(tab)[1]
+  ppv = tab[2,2]/rowSums(tab)[2]
+  if(is.numeric(truth) == FALSE &amp; is.logical(truth)==FALSE)
+    truth&lt;-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord &lt;- order(probs, decreasing=TRUE)
+  probs &lt;- probs[ord]; truth &lt;- truth[ord]
+  
+  TPR = cumsum(truth)/max(1,sum(truth)) 
+  FPR = cumsum(!truth)/max(1,sum(!truth))
+  
+  dup &lt;- c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+  TPR &lt;- c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  
+  n &lt;- length(TPR)
+  auc &lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+
+class_diag(probs, candy$chocolate)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       auc
+## 1 0.7647059 0.6756757 0.8333333 0.7575758 0.8018018</code></pre>
+<p>The accuracy is the proportion of correctly sorted candy based on if they’re chocolate or not with a probability greated than 0.5, my accuracy was 0.76. TPR the proportion of correctly sorted candy that are not chocolates with a probability greated than 0.5, my TPR was 0.67. TNR the proportion of correctly sorted candy that are chocolates with a probability greated than 0.5, my TNR was 0.833. The recall is the proportion of candy sorted as non chocolates with a probability greated than 0.5 that that actually are! My precsion was 0.75</p>
+<p><br></p>
+<p>The coefficients</p>
+<hr />
+<p><br></p>
+<pre class="r"><code># Density plot
+candy$logit &lt;- predict(candyfit, type = &quot;link&quot;)
+
+candy %&gt;%
+  ggplot() +
+  geom_density(aes(logit, color = chocolate1, fill = chocolate1), alpha=.4) +
+  theme(legend.position = c(.92,.90)) +
+  geom_vline(xintercept = 0) +
+  xlab(&quot;logit (log-odds)&quot;) +
+  geom_rug(aes(logit, color = chocolate1))</code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ROC curve
+candy$prob &lt;- predict(candyfit, type = &quot;response&quot;)
+
+ROCplot &lt;- ggplot(candy) +
+  geom_roc(aes(d = chocolate, m = prob), n.cuts=0) +
+  ggtitle(&quot;ROC curve based on Chocolate trends&quot;)
+
+ROCplot</code></pre>
+<p><img src="../project2_files/figure-html/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.8018018</code></pre>
+<p><br></p>
+<p>My ROC curve is pretty good, there is not too many FPR (false positives) there is a good amount of area under the curve, my AUC based on TPR and FPR is 0.802 which is a good value!</p>
+<hr />
+<p><br></p>
+<pre class="r"><code>set.seed(1234)
+k=10
+
+# 10 fold process
+candydat &lt;- candy[sample(nrow(candy)), ]
+folds &lt;- cut(seq(1:nrow(candy)), 
+             breaks = k,
+             labels = F)
+diags &lt;- NULL
+
+for (i in 1:k) {
+  train &lt;- candydat[folds!=i, ] 
+  test &lt;- candydat[folds==i, ]  
+  truth &lt;- test$chocolate
+  
+  candyfit &lt;- glm(chocolate~sugarpercent+pricepercent, 
+                data = candy, 
+                family = binomial(link = &quot;logit&quot;))
+  probs &lt;- predict(candyfit, newdata = test, type = &quot;response&quot;)
+  diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+
+summarise_all(diags, mean)</code></pre>
+<pre><code>##         acc      sens      spec  ppv       auc
+## 1 0.7680556 0.7028571 0.8390476 0.73 0.8139286</code></pre>
+<p>After preforming the 10 fold CV the acc, sens, spec, and ppv didn’t chance much and the AUC went up by a little bit, but nothing too significant. The accurary stayed the same, the sensitivity when from 0.67 to 0.70 and the recall went from 0.76 to 0.73.</p>
+<p><br></p>
+</div>
+<div id="lasso-regression" class="section level3">
+<h3>Lasso regression</h3>
+<pre class="r"><code>set.seed(1234)
+
+# matix prep
+y &lt;- as.matrix(candy$chocolate1) 
+x &lt;- model.matrix(chocolate1 ~ ., data = candy)[, -1] 
+cv &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+
+# lasso
+lasso &lt;- glmnet(x, y, family = &quot;binomial&quot;, lambda = cv$lambda.1se) 
+coef(lasso)</code></pre>
+<pre><code>## 101 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                                  s0
+## (Intercept)                               -5.385813
+## competitorname3 Musketeers                 .       
+## competitornameAir Heads                    .       
+## competitornameAlmond Joy                   .       
+## competitornameBaby Ruth                    .       
+## competitornameBoston Baked Beans           .       
+## competitornameCandy Corn                   .       
+## competitornameCaramel Apple Pops           .       
+## competitornameCharleston Chew              .       
+## competitornameChewey Lemonhead Fruit Mix   .       
+## competitornameChiclets                     .       
+## competitornameDots                         .       
+## competitornameDum Dums                     .       
+## competitornameFruit Chews                  .       
+## competitornameFun Dip                      .       
+## competitornameGobstopper                   .       
+## competitornameHaribo Gold Bears            .       
+## competitornameHaribo Happy Cola            .       
+## competitornameHaribo Sour Bears            .       
+## competitornameHaribo Twin Snakes           .       
+## competitornameHersheyÕs Kisses             .       
+## competitornameHersheyÕs Krackel            .       
+## competitornameHersheyÕs Milk Chocolate     .       
+## competitornameHersheyÕs Special Dark       .       
+## competitornameJawbusters                   .       
+## competitornameJunior Mints                 .       
+## competitornameKit Kat                      .       
+## competitornameLaffy Taffy                  .       
+## competitornameLemonhead                    .       
+## competitornameLifesavers big ring gummies  .       
+## competitornameM&amp;MÕs                        .       
+## competitornameMike &amp; Ike                   .       
+## competitornameMilk Duds                    .       
+## competitornameMilky Way                    .       
+## competitornameMilky Way Midnight           .       
+## competitornameMilky Way Simply Caramel     .       
+## competitornameMounds                       .       
+## competitornameMr Good Bar                  .       
+## competitornameNerds                        .       
+## competitornameNestle Butterfinger          .       
+## competitornameNestle Crunch                .       
+## competitornameNestle Smarties              .       
+## competitornameNik L Nip                    .       
+## competitornameNow &amp; Later                  .       
+## competitornameOne dime                     .       
+## competitornameOne quarter                  .       
+## competitornamePayday                       .       
+## competitornamePeanut butter M&amp;MÕs          .       
+## competitornamePeanut M&amp;Ms                  .       
+## competitornamePixie Sticks                 .       
+## 
+##  ..............................
+##  ........suppressing rows in show(); maybe adjust &#39;options(max.print= *, width = *)&#39;
+##  ..............................
+## 
+##                                                 s0
+## competitornameRed vines                    .      
+## competitornameReeseÕs Miniatures           .      
+## competitornameReeseÕs Peanut Butter cup    .      
+## competitornameReeseÕs pieces               .      
+## competitornameReeseÕs stuffed with pieces  .      
+## competitornameRing pop                     .      
+## competitornameRolo                         .      
+## competitornameRoot Beer Barrels            .      
+## competitornameRunts                        .      
+## competitornameSixlets                      .      
+## competitornameSkittles original            .      
+## competitornameSkittles wildberry           .      
+## competitornameSmarties candy               .      
+## competitornameSnickers                     .      
+## competitornameSnickers Crisper             .      
+## competitornameSour Patch Kids              .      
+## competitornameSour Patch Tricksters        .      
+## competitornameStarburst                    .      
+## competitornameStrawberry bon bons          .      
+## competitornameSugar Babies                 .      
+## competitornameSugar Daddy                  .      
+## competitornameSuper Bubble                 .      
+## competitornameSwedish Fish                 .      
+## competitornameTootsie Pop                  .      
+## competitornameTootsie Roll Juniors         .      
+## competitornameTootsie Roll Midgies         .      
+## competitornameTootsie Roll Snack Bars      .      
+## competitornameTrolli Sour Bites            .      
+## competitornameTwix                         .      
+## competitornameTwizzlers                    .      
+## competitornameWarheads                     .      
+## competitornameWelchÕs Fruit Snacks         .      
+## competitornameWertherÕs Original Caramel   .      
+## competitornameWhoppers                     .      
+## chocolate                                 10.50998
+## fruity                                     .      
+## caramel                                    .      
+## peanutyalmondy                             .      
+## nougat                                     .      
+## crispedricewafer                           .      
+## hard                                       .      
+## bar                                        .      
+## pluribus                                   .      
+## sugarpercent                               .      
+## pricepercent                               .      
+## winpercent                                 .      
+## winpercent_c                               .      
+## pricepercent_c                             .      
+## logit                                      .      
+## prob                                       .</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+
+data &lt;- candy %&gt;% 
+  sample_frac 
+folds &lt;- ntile(1:nrow(data),n=10) 
+
+diags&lt;-NULL
+for(i in 1:k){
+  train &lt;- data[folds!=i,] 
+  test &lt;- data[folds==i,] 
+  truth &lt;- test$chocolate 
+  
+  fit &lt;- glm(chocolate~sugarpercent+pricepercent, 
+                data = candy, 
+                family = binomial(link = &quot;logit&quot;))
+  probs &lt;- predict(candyfit, newdata=test, type=&quot;response&quot;)
+  
+  diags&lt;-rbind(diags,class_diag(probs,truth))
+}
+
+diags %&gt;% summarize_all(mean)</code></pre>
+<pre><code>##         acc  sens      spec  ppv    auc
+## 1 0.7680556 0.695 0.8495238 0.74 0.8225</code></pre>
+<p>This part was a little confusing for me, I did the lasso regression but my only variable that my only predicted variable is chocolate, thus I just chose to run the 10 fold CV with my previous glm. When I did this I saw that there was a small change in the AUC, it became a little higher! The accuracy stayed the same as all the previous calculations I’m assuming that’s because my data didn’t have much overfitting for these variables!</p>
+</div>
+</div>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../js/docs.min.js"></script>
+<script src="../js/main.js"></script>
+
+<script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
